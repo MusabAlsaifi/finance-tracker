@@ -6,6 +6,7 @@ IMPLEMENTATION_PLAN.md
 *.sqlite
 *.sqlite3
 finance_tracker.db
+alembic/versions/*.py
 
 __pycache__/
 *.py[cod]
