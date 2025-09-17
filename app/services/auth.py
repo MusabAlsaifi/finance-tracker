@@ -6,9 +6,9 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
-from app.config import settings
-from app.models.user import User
-from app.service.user import UserService
+from config import settings
+from models.user import User
+from services.user import UserService
 
 
 class TokenType(str, Enum):
@@ -28,9 +28,9 @@ class AuthService:
     def __init__(
         self, 
         db: Session,
+        user_service: UserService,
         secret_key: str = settings.SECRET_KEY,
         algorithm: str = settings.ALGORITHM,
-        user_service: UserService
     ):
         self.db = db
         self.secret_key = secret_key
@@ -47,14 +47,13 @@ class AuthService:
         payload = self._create_payload(user_id, TokenType.REFRESH)
         return jwt.encode(payload, self.secret_key, self.algorithm)
     
-    def verify_token(self, token: str) -> str:
+    def verify_token(self, token: str) -> dict:
         """Verify and decode the token"""
         try:
             payload = jwt.decode(token, self.secret_key, [self.algorithm])
-            user_id = payload.get("sub")
-            if not user_id:
+            if not payload.get("sub"):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-            return user_id
+            return payload
         except ExpiredSignatureError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
         except InvalidTokenError:
